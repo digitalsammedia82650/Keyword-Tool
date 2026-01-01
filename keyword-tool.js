@@ -1,134 +1,227 @@
-/* ==========================================
-   KEYWORD ARCHITECT PRO – CORE ENGINE
-   POS-STYLE NOUN CHUNKING + SEO LOGIC
-========================================== */
+/* ============================================================
+   KEYWORD ARCHITECT PRO – UNIFIED ENGINE
+   Intent Detection + Grammar + POS-style Chunking
+   No Libraries | SEO-Safe | Blogger-Safe
+============================================================ */
 
-let selectedIntent = "auto";
+/* =========================
+   1. INTENT SIGNAL DICTIONARY
+========================= */
 
-/* ===== CONFIG ===== */
+const INTENT_SIGNALS = {
+  "Local / Proximity": [
+    "near me","nearby","closest","around here","within walking distance",
+    "local","in city","zip code","open now","address","directions","map","store hours"
+  ],
+  "Informational (Interrogative)": [
+    "how","what","who","where","why","when","which",
+    "is it","can i","should i","does","meaning","definition"
+  ],
+  "Transactional (Action)": [
+    "buy","order","purchase","shop","get","reserve","book",
+    "schedule","hire","checkout","add to cart","online"
+  ],
+  "Commercial (Comparison)": [
+    "vs","versus","alternative","comparison",
+    "difference between","better than","competitors"
+  ],
+  "Commercial (Quality/Ranking)": [
+    "best","top","rated","#1","review","testimonial",
+    "pros and cons","recommended","is it worth it"
+  ],
+  "Transactional (Price/Value)": [
+    "cheap","affordable","discount","coupon","promo",
+    "sale","price","cost","budget","lowest price","wholesale"
+  ],
+  "Educational (Resource)": [
+    "tutorial","guide","tips","checklist","examples","samples",
+    "case study","whitepaper","facts","history",
+    "statistics","documentation","for beginners"
+  ],
+  "Navigational (Brand Access)": [
+    "login","sign in","sign up","official site","portal",
+    "dashboard","homepage","support","contact","careers","jobs"
+  ],
+  "Utility (Asset/File)": [
+    "download","install","pdf","excel","csv","png","svg",
+    "plugin","extension","app","software","open source"
+  ],
+  "Temporal (Freshness)": [
+    "new","latest","today","tonight","live",
+    "current","forecast","release date","2026"
+  ],
+  "Technical (Problem Solving)": [
+    "fix","repair","error","troubleshooting",
+    "broken","not working","refund","cancel","remove"
+  ],
+  "Niche Audience": [
+    "for kids","for seniors","for professionals",
+    "for small business","for enterprise","for students"
+  ]
+};
+
+/* =========================
+   2. GRAMMAR RULE SET
+========================= */
+
+const GRAMMAR_RULES = {
+  Interrogative: ["who","what","where","when","why","how","is","can","do","does"],
+  Action_Verbs: ["buy","get","fix","download","order","book","find","clean"],
+  Superlatives: ["best","top","cheapest","fastest","highest","worst"],
+  Prepositions_Local: ["in","at","near","around","from"]
+};
 
 const STOP_WORDS = [
   "and","or","but","if","while","because",
   "a","an","the","this","that","these","those",
   "is","are","was","were","be","been","being",
-  "of","from","by","as"
+  "of","from","by","as","with","without"
 ];
 
-const PREPOSITIONS = ["for","in","to","near","with","without","on","at"];
+const PREPOSITIONS = ["for","in","to","near","with","without","on","at","around"];
 
-const INTENT_TRIGGERS = {
-  commercial: ["best","buy","cheap","price","pricing","review","top","vs"],
-  informational: ["how","what","why","guide","tips","learn","examples"],
-  local: ["near","near me","in"]
-};
+/* =========================
+   3. INTENT ANALYSIS
+========================= */
 
-/* ===== UI ===== */
+function analyzeIntent(query) {
+  query = query.toLowerCase();
+  let detected = [];
 
-function setIntent(intent,btn){
-    selectedIntent = intent;
-    document.querySelectorAll(".intent-bar button")
-        .forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-}
-
-/* ===== HELPERS ===== */
-
-function detectIntentAuto(phrase){
-    for(const type in INTENT_TRIGGERS){
-        if(INTENT_TRIGGERS[type].some(w => phrase.includes(w))){
-            return type;
-        }
+  for (const intent in INTENT_SIGNALS) {
+    if (INTENT_SIGNALS[intent].some(w => query.includes(w))) {
+      detected.push(intent);
     }
-    return "general";
+  }
+
+  return detected.length ? detected : ["General / Unclear"];
 }
 
-function clean(str){
-    return str.replace(/\s+/g," ").trim();
-}
+/* =========================
+   4. GRAMMAR + INTENT ANALYZER
+========================= */
 
-/* ===== CORE EXTRACTION ===== */
+function analyzeQuery(query) {
+  query = query.toLowerCase();
 
-function extractKeywords(){
+  let grammarHits = [];
+  let intentHits = [];
 
-    const seed = document.getElementById("seed").value.trim().toLowerCase();
-    const text = document.getElementById("content").value;
-    const manualLoc = document.getElementById("manualLocation").value.trim().toLowerCase();
-
-    if(!seed || !text){
-        alert("Seed keyword and content are required.");
-        return;
+  for (const rule in GRAMMAR_RULES) {
+    if (GRAMMAR_RULES[rule].some(w => query.split(" ").includes(w))) {
+      grammarHits.push(rule);
     }
+  }
 
-    const sentences = text
-        .replace(/\n+/g," ")
-        .split(/[.!?]+/);
+  intentHits = analyzeIntent(query);
 
-    let results = [];
+  if (grammarHits.includes("Interrogative") &&
+      intentHits.includes("General / Unclear")) {
+    intentHits = ["Informational (Implicit)"];
+  }
 
-    sentences.forEach(sentence => {
+  return {
+    query,
+    grammar: grammarHits,
+    intent: intentHits
+  };
+}
 
-        const words = sentence
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g," ")
-            .split(/\s+/)
-            .filter(Boolean);
+/* =========================
+   5. TOOL-1: QUERY BUILDER
+   Seed + Location + Intent
+========================= */
 
-        const seedIndex = words.indexOf(seed);
-        if(seedIndex === -1) return;
+function buildQueries(seed, location = "", manualIntent = "auto") {
+  seed = seed.toLowerCase();
+  location = location.toLowerCase();
 
-        let phrase = [];
+  let baseQueries = [];
+  let intents = Object.keys(INTENT_SIGNALS);
 
-        /* ==== LEFT (Adjectives / Modifiers) ==== */
-        for(let i = seedIndex - 1; i >= 0; i--){
-            if(STOP_WORDS.includes(words[i])) break;
-            phrase.unshift(words[i]);
-            if(phrase.length >= 3) break;
-        }
-
-        /* ==== SEED ==== */
-        phrase.push(seed);
-
-        /* ==== RIGHT (Grammar-Safe Expansion) ==== */
-        let usedPrep = false;
-
-        for(let i = seedIndex + 1; i < words.length; i++){
-            const w = words[i];
-
-            if(STOP_WORDS.includes(w) && !PREPOSITIONS.includes(w)) break;
-
-            phrase.push(w);
-
-            if(PREPOSITIONS.includes(w)){
-                usedPrep = true;
-                continue;
-            }
-
-            if(usedPrep && phrase.length >= 7) break;
-            if(!usedPrep && phrase.length >= 5) break;
-        }
-
-        let finalPhrase = clean(phrase.join(" "));
-        const lastWord = finalPhrase.split(" ").slice(-1)[0];
-
-        if(PREPOSITIONS.includes(lastWord)) return;
-        if(finalPhrase.length <= seed.length) return;
-
-        /* ==== LOCATION (AUTO + MANUAL) ==== */
-        if(manualLoc && !finalPhrase.includes(manualLoc)){
-            finalPhrase += " in " + manualLoc;
-        }
-
-        /* ==== INTENT ==== */
-        const intent =
-            selectedIntent === "auto"
-            ? detectIntentAuto(finalPhrase)
-            : selectedIntent;
-
-        results.push(finalPhrase + (intent !== "general" ? ` [${intent}]` : ""));
+  intents.forEach(intent => {
+    INTENT_SIGNALS[intent].forEach(mod => {
+      baseQueries.push(`${mod} ${seed}`);
+      if (location) baseQueries.push(`${mod} ${seed} in ${location}`);
     });
+  });
 
-    /* ==== DEDUPLICATE ==== */
-    const unique = [...new Set(results)];
-
-    document.getElementById("output").value = unique.join("\n");
+  return baseQueries.map(q => {
+    const analysis = analyzeQuery(q);
+    return {
+      keyword: q,
+      grammar: analysis.grammar,
+      intent: manualIntent === "auto" ? analysis.intent : [manualIntent]
+    };
+  });
 }
+
+/* =========================
+   6. TOOL-2: CONTENT EXTRACTOR
+   Grammar-Aware
+========================= */
+
+function extractFromContent(seed, text) {
+  seed = seed.toLowerCase();
+  let results = [];
+
+  const sentences = text.replace(/\n+/g," ").split(/[.!?]+/);
+
+  sentences.forEach(sentence => {
+    const words = sentence
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g,"")
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const idx = words.indexOf(seed);
+    if (idx === -1) return;
+
+    let phrase = [];
+
+    /* LEFT: adjective modifiers */
+    for (let i = idx - 1; i >= 0; i--) {
+      if (STOP_WORDS.includes(words[i])) break;
+      phrase.unshift(words[i]);
+      if (phrase.length >= 3) break;
+    }
+
+    /* SEED */
+    phrase.push(seed);
+
+    /* RIGHT: noun + preposition logic */
+    let prepUsed = false;
+    for (let i = idx + 1; i < words.length; i++) {
+      const w = words[i];
+      if (STOP_WORDS.includes(w) && !PREPOSITIONS.includes(w)) break;
+      phrase.push(w);
+      if (PREPOSITIONS.includes(w)) prepUsed = true;
+      if (prepUsed && phrase.length >= 7) break;
+      if (!prepUsed && phrase.length >= 5) break;
+    }
+
+    let finalPhrase = phrase.join(" ").trim();
+    const lastWord = finalPhrase.split(" ").pop();
+    if (PREPOSITIONS.includes(lastWord)) return;
+
+    const analysis = analyzeQuery(finalPhrase);
+    results.push({
+      keyword: finalPhrase,
+      grammar: analysis.grammar,
+      intent: analysis.intent
+    });
+  });
+
+  return results;
+}
+
+/* =========================
+   7. GLOBAL EXPORT (SAFE)
+========================= */
+
+window.KeywordArchitectPro = {
+  analyzeQuery,
+  analyzeIntent,
+  buildQueries,
+  extractFromContent
+};
