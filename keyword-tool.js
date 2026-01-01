@@ -1,134 +1,134 @@
-/**
- * Keyword Architect Pro - Core Logic
- * Includes: Semantic Mixing and Natural Language Extraction
- */
+/* ==========================================
+   KEYWORD ARCHITECT PRO – CORE ENGINE
+   POS-STYLE NOUN CHUNKING + SEO LOGIC
+========================================== */
 
-let currentMode = 'mix';
+let selectedIntent = "auto";
 
-/**
- * Switches between Mixer and Extractor modes
- */
-function switchTab(mode) {
-    currentMode = mode;
-    // UI Logic: Update Tab Classes
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
-    
-    // UI Logic: Toggle Visibility
-    const mixUI = document.getElementById('mix-ui');
-    const extractUI = document.getElementById('extract-ui');
-    if(mixUI && extractUI) {
-        mixUI.style.display = mode === 'mix' ? 'block' : 'none';
-        extractUI.style.display = mode === 'extract' ? 'block' : 'none';
-    }
+/* ===== CONFIG ===== */
+
+const STOP_WORDS = [
+  "and","or","but","if","while","because",
+  "a","an","the","this","that","these","those",
+  "is","are","was","were","be","been","being",
+  "of","from","by","as"
+];
+
+const PREPOSITIONS = ["for","in","to","near","with","without","on","at"];
+
+const INTENT_TRIGGERS = {
+  commercial: ["best","buy","cheap","price","pricing","review","top","vs"],
+  informational: ["how","what","why","guide","tips","learn","examples"],
+  local: ["near","near me","in"]
+};
+
+/* ===== UI ===== */
+
+function setIntent(intent,btn){
+    selectedIntent = intent;
+    document.querySelectorAll(".intent-bar button")
+        .forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
 }
 
-/**
- * Main Controller function
- */
-function runTool() {
-    if (currentMode === 'mix') {
-        generateMix();
-    } else {
-        extractKeywords();
+/* ===== HELPERS ===== */
+
+function detectIntentAuto(phrase){
+    for(const type in INTENT_TRIGGERS){
+        if(INTENT_TRIGGERS[type].some(w => phrase.includes(w))){
+            return type;
+        }
     }
+    return "general";
 }
 
-/**
- * PSYCHOLOGY + GRAMMAR MIXER
- * Follows "Adjective-Noun-Location" syntax
- */
-function generateMix() {
-    const headVal = document.getElementById('seeds').value;
-    const modVal = document.getElementById('mods').value;
-    
-    if (!headVal || !modVal) {
-        alert("Please enter Head terms and Modifiers.");
+function clean(str){
+    return str.replace(/\s+/g," ").trim();
+}
+
+/* ===== CORE EXTRACTION ===== */
+
+function extractKeywords(){
+
+    const seed = document.getElementById("seed").value.trim().toLowerCase();
+    const text = document.getElementById("content").value;
+    const manualLoc = document.getElementById("manualLocation").value.trim().toLowerCase();
+
+    if(!seed || !text){
+        alert("Seed keyword and content are required.");
         return;
     }
 
-    const heads = headVal.split(',').map(s => s.trim()).filter(s => s);
-    const mods = modVal.split(',').map(s => s.trim()).filter(s => s);
+    const sentences = text
+        .replace(/\n+/g," ")
+        .split(/[.!?]+/);
+
     let results = [];
 
-    heads.forEach(h => {
-        mods.forEach(m => {
-            // Grammatical Logic: Detect Places for 'in' vs Attributes for 'for'
-            const isPlace = /london|nyc|ny|city|india|usa|texas|miami|uk/i.test(m);
-            let prep = isPlace ? 'in' : 'for';
-            if (m.toLowerCase().includes('near me')) prep = ''; // 'near me' acts as its own prep
-
-            // Push variations based on Search Psychology
-            results.push(`${m} ${h}`);              // Trigger + Core
-            results.push(`${h} ${prep} ${m}`);      // Core + Context
-            results.push(`best ${h} ${prep} ${m}`); // High Intent Triple
-        });
-    });
-    showResult(results);
-}
-
-/**
- * SEMANTIC EXTRACTOR
- * Scans text for seed context using N-Gram windows
- */
-function extractKeywords() {
-    const seed = document.getElementById('target-seed').value.trim().toLowerCase();
-    const text = document.getElementById('para-input').value;
-    
-    if (!seed || !text) {
-        alert("Please provide both a Target Seed and Text to scan.");
-        return;
-    }
-
-    // Grammar-aware split: break into sentences to maintain semantic boundaries
-    const sentences = text.split(/[.!?]+/);
-    let foundPhrases = [];
-
     sentences.forEach(sentence => {
-        if (sentence.toLowerCase().includes(seed)) {
-            Co
 
+        const words = sentence
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g," ")
+            .split(/\s+/)
+            .filter(Boolean);
 
-nst words = sentence.trim().split(/\s+/);
-            // Find index of seed word while ignoring punctuation
-            const index = words.findIndex(w => w.toLowerCase().replace(/[^a-z]/g, '') === seed);
-            
-            if (index !== -1) {
-                // Psychology: Grab 2 words before and after (The Context Window)
-                let start = Math.max(0, index - 2);
-                let end = Math.min(words.length, index + 3);
-                
-                let phrase = words.slice(start, end).join(' ');
-                // Clean punctuation for SEO keyword use
-                foundPhrases.push(phrase.replace(/[^\w\s]/gi, '').trim());
-            }
+        const seedIndex = words.indexOf(seed);
+        if(seedIndex === -1) return;
+
+        let phrase = [];
+
+        /* ==== LEFT (Adjectives / Modifiers) ==== */
+        for(let i = seedIndex - 1; i >= 0; i--){
+            if(STOP_WORDS.includes(words[i])) break;
+            phrase.unshift(words[i]);
+            if(phrase.length >= 3) break;
         }
+
+        /* ==== SEED ==== */
+        phrase.push(seed);
+
+        /* ==== RIGHT (Grammar-Safe Expansion) ==== */
+        let usedPrep = false;
+
+        for(let i = seedIndex + 1; i < words.length; i++){
+            const w = words[i];
+
+            if(STOP_WORDS.includes(w) && !PREPOSITIONS.includes(w)) break;
+
+            phrase.push(w);
+
+            if(PREPOSITIONS.includes(w)){
+                usedPrep = true;
+                continue;
+            }
+
+            if(usedPrep && phrase.length >= 7) break;
+            if(!usedPrep && phrase.length >= 5) break;
+        }
+
+        let finalPhrase = clean(phrase.join(" "));
+        const lastWord = finalPhrase.split(" ").slice(-1)[0];
+
+        if(PREPOSITIONS.includes(lastWord)) return;
+        if(finalPhrase.length <= seed.length) return;
+
+        /* ==== LOCATION (AUTO + MANUAL) ==== */
+        if(manualLoc && !finalPhrase.includes(manualLoc)){
+            finalPhrase += " in " + manualLoc;
+        }
+
+        /* ==== INTENT ==== */
+        const intent =
+            selectedIntent === "auto"
+            ? detectIntentAuto(finalPhrase)
+            : selectedIntent;
+
+        results.push(finalPhrase + (intent !== "general" ? ` [${intent}]` : ""));
     });
-    showResult(foundPhrases);
-}
 
-/**
- * Display and Deduplicate results
- */
-function showResult(arr) {
-    const output = document.getElementById('output');
-    const resultArea = document.getElementById('result-area');
-    
-    // Psychology: Users want unique, non-repetitive results
-    const unique = [...new Set(arr)];
-    
-    output.value = unique.join('\n');
-    resultArea.style.display = 'block';
-}
+    /* ==== DEDUPLICATE ==== */
+    const unique = [...new Set(results)];
 
-/**
- * Clipboard functionality
- */
-function copyResult() {
-    const textArea = document.getElementById('output');
-    textArea.select();
-    document.execCommand('copy');
-    alert("Keywords copied to clipboard!");
+    document.getElementById("output").value = unique.join("\n");
 }
