@@ -1,69 +1,89 @@
+
 /* =====================================================
-   KEYWORD ARCHITECT PRO – LIGHT ENGINE
-   Blogger-Safe | DOM-Driven Dictionaries
+   GRAMMAR ENGINE
 ===================================================== */
 
-function readList(id){
-  const obj={};
-  document.querySelectorAll(`#${id} li`).forEach(li=>{
-    const key=li.getAttribute("data-key");
-    const values=li.textContent
-      .toLowerCase().split(",")
-      .map(v=>v.trim()).filter(Boolean);
-    obj[key]=values;
-  });
-  return obj;
-}
-
-function analyzeIntent(query){
-  const dict=readList("kap-intents");
-  query=query.toLowerCase();
-  let hits=[];
-  for(const k in dict){
-    if(dict[k].some(w=>query.includes(w))) hits.push(k);
-  }
-  return hits.length?hits:["General"];
-}
-
-function analyzeQuery(query){
-  const grammar=readList("kap-grammar");
-  let gHits=[];
-  for(const g in grammar){
-    if(grammar[g].some(w=>query.split(" ").includes(w))) gHits.push(g);
-  }
-  return{query,grammar:gHits,intent:analyzeIntent(query)};
-}
-
-function buildQueries(seed,location="",manualIntent="auto"){
-  const intents=readList("kap-intents");
-  let out=[];
-  for(const i in intents){
-    intents[i].forEach(m=>{
-      let q=`${m} ${seed}`;
-      if(location) q+=` in ${location}`;
-      const a=analyzeQuery(q);
-      out.push({
-        keyword:q,
-        grammar:a.grammar,
-        intent:manualIntent==="auto"?a.intent:[manualIntent]
-      });
-    });
-  }
-  return out;
-}
-
-function extractFromContent(seed,text){
-  seed=seed.toLowerCase();
-  return text.split(/[.!?]/).filter(s=>s.toLowerCase().includes(seed))
-    .map(s=>{
-      const a=analyzeQuery(s.toLowerCase());
-      return{keyword:s.trim(),intent:a.intent,grammar:a.grammar};
-    });
-}
-
-window.KeywordArchitectPro={
-  analyzeQuery,
-  analyzeIntent,
-  buildQueries,
-  extractFromContent
+const Grammar = {
+    plural: (w) => w.endsWith('s') ? w : w + 's',
+    article: (w) => /^[aeiou]/i.test(w) ? "an" : "a",
+    
+    blueprints: [
+        (s) => `How to use ${Grammar.article(s)} ${s}`,
+        (s) => `Best ${s} for professionals`,
+        (s) => `Affordable ${Grammar.plural(s)} available online`,
+        (s) => `Where to buy ${Grammar.article(s)} ${s}`,
+        (s) => `Professional ${s} guide 2025`
+    ]
 };
+
+/* ---- TOOL 1: QUERY BUILDER (MULTI-LOCATION) ---- */
+function runQuery() {
+    const seed = document.getElementById("seed").value.trim();
+    const locInput = document.getElementById("location").value.trim();
+    if (!seed) return alert("Enter a seed keyword");
+
+    document.getElementById("preview-area").className = "kap-hidden";
+    let locations = locInput ? locInput.split(',').map(l => l.trim()) : [""];
+    let finalKeywords = [];
+
+    locations.forEach(loc => {
+        Grammar.blueprints.forEach(tpl => {
+            let line = tpl(seed);
+            if (loc) line += ` in ${loc}`;
+            finalKeywords.push(line);
+        });
+        if(loc) finalKeywords.push(`${seed} near ${loc}`);
+    });
+
+    document.getElementById("output-text").value = finalKeywords.join("\n");
+}
+
+/* ---- TOOL 2: CONTENT EXTRACTOR (BOUNDARY LOGIC) ---- */
+function runContent() {
+    const seed = document.getElementById("content-seed").value.trim();
+    const text = document.getElementById("content-input").value;
+    if (!seed || !text) return alert("Enter keyword and content");
+
+    document.getElementById("preview-area").className = "";
+
+    /**
+     * GRAMMAR LOGIC UPGRADE:
+     * We split by:
+     * 1. Newlines (\n) -> capturing headlines
+     * 2. Punctuation (. ! ?) followed by space or end of string
+     */
+    const segments = text.split(/\n|(?<=[.!?])\s+/);
+    
+    let plainTextOutput = [];
+    let htmlPreviewOutput = [];
+    const seedRegex = new RegExp(`(${seed})`, 'gi');
+
+    segments.forEach(seg => {
+        let cleanSeg = seg.trim();
+        if (!cleanSeg) return;
+
+        if (cleanSeg.toLowerCase().includes(seed.toLowerCase())) {
+            // Logic: It's a valid sentence/headline containing the seed
+            plainTextOutput.push(cleanSeg);
+            
+            const highlighted = cleanSeg.replace(seedRegex, `<span class="highlight">$1</span>`);
+            htmlPreviewOutput.push(`<div class="sentence-block">${highlighted}</div>`);
+        }
+    });
+
+    document.getElementById("output-text").value = plainTextOutput.join("\n\n");
+    document.getElementById("highlight-preview").innerHTML = htmlPreviewOutput.length 
+        ? htmlPreviewOutput.join("") 
+        : "No matches found.";
+}
+
+/* ---- UI ---- */
+function kapSwitch(mode) {
+    document.getElementById("tab-query").className = (mode === 'query' ? 'active' : '');
+    document.getElementById("tab-content").className = (mode === 'content' ? 'active' : '');
+    document.getElementById("kap-query").className = (mode === 'query' ? '' : 'kap-hidden');
+    document.getElementById("kap-content").className = (mode === 'content' ? '' : 'kap-hidden');
+    document.getElementById("output-text").value = "";
+    document.getElementById("preview-area").className = "kap-hidden";
+}
+
