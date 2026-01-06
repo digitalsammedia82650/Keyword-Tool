@@ -2,13 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Keyword Architect Pro | Advanced Logic</title>
+<title>Keyword Architect Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ===========================
-   MODERN UI (Ahrefs / Uber)
-=========================== */
 #kap-app{
   max-width:900px;
   margin:30px auto;
@@ -16,125 +13,171 @@
   padding:30px;
   border-radius:12px;
   box-shadow:0 10px 30px rgba(0,0,0,0.1);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   color:#1e293b;
 }
-#kap-app h1 { margin:0; font-size:24px; color:#0f172a; }
-#kap-app .sub { font-size:13px; color:#64748b; margin-bottom:20px; }
+h1{margin:0;font-size:24px}
+.sub{font-size:13px;color:#64748b;margin-bottom:20px}
 
-.kap-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid #e2e8f0; }
-.kap-tabs button {
-  padding:12px 20px; border:none; background:none;
-  font-weight:600; cursor:pointer; color:#64748b;
-  border-bottom:2px solid transparent;
-}
-.kap-tabs button.active { color:#2563eb; border-bottom-color:#2563eb; }
-
-.input-group { margin-bottom:15px; }
-.input-label {
-  display:block; font-size:12px; font-weight:700;
-  margin-bottom:5px; color:#475569;
-}
-
-#kap-app input, #kap-app textarea, #kap-app select {
-  width:100%; padding:12px; border-radius:8px;
-  border:1px solid #cbd5e1; font-size:14px;
-  box-sizing:border-box;
-}
-
-#kap-app button.main-btn {
-  width:100%; padding:15px; border:none;
-  border-radius:8px; background:#2563eb;
-  color:#fff; font-size:15px; font-weight:700;
+.tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid #e2e8f0}
+.tabs button{
+  padding:12px 18px;
+  background:none;
+  border:none;
+  font-weight:600;
   cursor:pointer;
+  color:#64748b;
+  border-bottom:2px solid transparent
+}
+.tabs button.active{
+  color:#2563eb;
+  border-bottom-color:#2563eb
 }
 
-.results-label {
-  margin-top:25px; font-size:11px; font-weight:800;
-  color:#1e40af; text-transform:uppercase;
-  letter-spacing:1px;
+.input-group{margin-bottom:15px}
+label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#475569}
+
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #cbd5e1;
+  font-size:14px;
+  box-sizing:border-box
 }
 
-#output-text {
-  width:100%; height:200px; margin-top:10px;
-  padding:12px; background:#f8fafc;
-  border:1px solid #e2e8f0; border-radius:8px;
-  font-family:monospace; font-size:13px;
+button.main{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer
 }
 
-.kap-hidden{display:none;}
+.results-label{
+  margin-top:25px;
+  font-size:11px;
+  font-weight:800;
+  color:#1e40af;
+  text-transform:uppercase;
+  letter-spacing:1px
+}
+
+#output{
+  width:100%;
+  height:180px;
+  margin-top:10px;
+  padding:12px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:8px;
+  font-family:Courier New,monospace;
+  font-size:13px
+}
+
+#preview{
+  margin-top:10px;
+  padding:15px;
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:8px;
+  max-height:300px;
+  overflow:auto
+}
+.highlight{background:#fde047;font-weight:700}
+.block{
+  margin-bottom:10px;
+  padding:8px;
+  background:#f1f5f9;
+  border-left:4px solid #2563eb;
+  border-radius:4px
+}
+
+.hidden{display:none}
 </style>
 </head>
 
 <body>
-
 <div id="kap-app">
-  <h1>Keyword Architect Pro</h1>
-  <div class="sub">Grammar-Safe Query Construction Engine</div>
+<h1>Keyword Architect Pro</h1>
+<div class="sub">Clean Grammar · SEO-Safe · Blogger Ready</div>
 
-  <div class="kap-tabs">
-    <button id="tab-query" class="active" onclick="kapSwitch('query')">Query Builder</button>
-    <button id="tab-content" onclick="kapSwitch('content')">Content Extractor</button>
+<div class="tabs">
+  <button id="tab-builder" class="active" onclick="switchTab('builder')">
+    Keyword Builder
+  </button>
+  <button id="tab-extractor" onclick="switchTab('extractor')">
+    Content Keyword Extractor
+  </button>
+</div>
+
+<!-- TOOL 1 -->
+<div id="builder">
+  <div class="input-group">
+    <label>Seed Keyword</label>
+    <input id="seed" placeholder="bookmark">
   </div>
 
-  <!-- ================= QUERY BUILDER ================= -->
-  <div id="kap-query">
-    <div class="input-group">
-      <label class="input-label">Seed Keyword</label>
-      <input id="seed" placeholder="e.g. bookmark">
-    </div>
-
-    <div class="input-group">
-      <label class="input-label">Locations (comma separated)</label>
-      <input id="location" placeholder="New York, London">
-    </div>
-
-    <div class="input-group">
-      <label class="input-label">Add Additional Phrase?</label>
-      <select id="modifier-type">
-        <option value="">— None —</option>
-        <option value="context">Contextual modifier</option>
-        <option value="intent">Intent modifier</option>
-        <option value="expansion">Query expansion phrase</option>
-        <option value="prepositional">Prepositional adjunct</option>
-        <option value="verb">Verb / Interrogative clause</option>
-      </select>
-    </div>
-
-    <div class="input-group">
-      <label class="input-label">Modifier Text</label>
-      <input id="modifier-text" placeholder="e.g. Who did it">
-    </div>
-
-    <button class="main-btn" onclick="runQuery()">Generate Keywords</button>
+  <div class="input-group">
+    <label>Locations (comma separated)</label>
+    <input id="location" placeholder="Newyork, London">
   </div>
 
-  <!-- ================= CONTENT EXTRACTOR ================= -->
-  <div id="kap-content" class="kap-hidden">
-    <div class="input-group">
-      <label class="input-label">Keyword to Extract</label>
-      <input id="content-seed">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Paste Content</label>
-      <textarea id="content-input"></textarea>
-    </div>
-    <button class="main-btn" onclick="runContent()">Extract</button>
+  <div class="input-group">
+    <label>Optional Modifier Type</label>
+    <select id="modifier-type">
+      <option value="">None</option>
+      <option value="interrogative">How / Why / Who / What (Question)</option>
+      <option value="context">Contextual Phrase</option>
+    </select>
   </div>
 
-  <div class="results-label">Final Output</div>
-  <textarea id="output-text" readonly></textarea>
+  <div class="input-group">
+    <label>Optional Modifier Phrase</label>
+    <input id="modifier-text" placeholder="How to use">
+  </div>
+
+  <button class="main" onclick="runBuilder()">
+    Generate Keyword Ideas
+  </button>
+</div>
+
+<!-- TOOL 2 -->
+<div id="extractor" class="hidden">
+  <div class="input-group">
+    <label>Keyword to Find</label>
+    <input id="extract-seed" placeholder="bookmark">
+  </div>
+
+  <div class="input-group">
+    <label>Paste Your Content</label>
+    <textarea id="content" placeholder="Paste article text here..."></textarea>
+  </div>
+
+  <button class="main" onclick="runExtractor()">
+    Extract Keyword Sentences
+  </button>
+</div>
+
+<div class="results-label">Output</div>
+<textarea id="output" readonly></textarea>
+
+<div id="preview-area" class="hidden">
+  <div class="results-label">Context Preview</div>
+  <div id="preview"></div>
+</div>
 </div>
 
 <script>
-/* =======================
-   GRAMMAR ENGINE
-======================= */
-const Grammar = {
+/* ===== GRAMMAR HELPERS ===== */
+const Grammar={
   plural:w=>w.endsWith("s")?w:w+"s",
   article:w=>/^[aeiou]/i.test(w)?"an":"a",
   blueprints:[
-    s=>`How to use ${Grammar.article(s)} ${s}`,
     s=>`Best ${s} for professionals`,
     s=>`Affordable ${Grammar.plural(s)} available online`,
     s=>`Where to buy ${Grammar.article(s)} ${s}`,
@@ -142,82 +185,69 @@ const Grammar = {
   ]
 };
 
-/* =======================
-   QUERY BUILDER (FIXED)
-======================= */
-function runQuery(){
+/* ===== TOOL 1: BUILDER ===== */
+function runBuilder(){
   const seed=document.getElementById("seed").value.trim();
-  const locInput=document.getElementById("location").value.trim();
-  const modType=document.getElementById("modifier-type").value;
-  const modText=document.getElementById("modifier-text").value.trim();
+  if(!seed) return alert("Please enter a seed keyword");
 
-  if(!seed) return alert("Enter seed keyword");
+  const locations=document.getElementById("location").value
+    .split(",").map(l=>l.trim()).filter(Boolean);
 
-  const interrogatives=["how","where","what","why","when","who","which"];
-  const locations=locInput?locInput.split(",").map(l=>l.trim()):[""];
-  let output=[];
+  const type=document.getElementById("modifier-type").value;
+  const phrase=document.getElementById("modifier-text").value.trim();
+
+  let out=[];
 
   locations.forEach(loc=>{
-    Grammar.blueprints.forEach(tpl=>{
-      let base=tpl(seed);
-      let baseLower=base.toLowerCase();
-      let parts=[];
-
-      const baseIsQuestion=interrogatives.some(q=>baseLower.startsWith(q+" "));
-
-      if(modType==="verb" && modText && !baseIsQuestion){
-        parts.push(modText);
-      }
-
-      if(modType==="intent" && modText){
-        base=`${modText} ${seed}`;
-      }
-
-      parts.push(base);
-
-      if((modType==="context"||modType==="expansion") && modText){
-        parts.push(modText);
-      }
-
-      if(loc) parts.push(`in ${loc}`);
-
-      if(modType==="prepositional" && modText){
-        parts.push(modText);
-      }
-
-      output.push(parts.join(" ").replace(/\s+/g," ").trim());
-    });
-
-    if(loc) output.push(`${seed} near ${loc}`);
+    if(type==="interrogative" && phrase){
+      out.push(`${phrase} ${Grammar.article(seed)} ${seed} in ${loc}`);
+    } else {
+      Grammar.blueprints.forEach(b=>{
+        out.push(`${b(seed)} in ${loc}`);
+      });
+    }
+    out.push(`${seed} near ${loc}`);
   });
 
-  document.getElementById("output-text").value=output.join("\n");
+  document.getElementById("output").value=out.join("\n");
+  document.getElementById("preview-area").className="hidden";
 }
 
-/* =======================
-   CONTENT EXTRACTOR
-======================= */
-function runContent(){
-  const seed=document.getElementById("content-seed").value.trim().toLowerCase();
-  const text=document.getElementById("content-input").value;
-  if(!seed||!text) return alert("Missing input");
+/* ===== TOOL 2: EXTRACTOR ===== */
+function runExtractor(){
+  const seed=document.getElementById("extract-seed").value.trim();
+  const text=document.getElementById("content").value;
+  if(!seed||!text) return alert("Please enter keyword and content");
 
   const segments=text.split(/\n|(?<=[.!?])\s+/);
-  const matches=segments.filter(s=>s.toLowerCase().includes(seed));
-  document.getElementById("output-text").value=matches.join("\n\n");
+  const regex=new RegExp(`(${seed})`,"gi");
+
+  let plain=[], html=[];
+
+  segments.forEach(s=>{
+    if(s.toLowerCase().includes(seed.toLowerCase())){
+      plain.push(s.trim());
+      html.push(
+        `<div class="block">${s.replace(regex,
+          `<span class="highlight">$1</span>`)}</div>`
+      );
+    }
+  });
+
+  document.getElementById("output").value=plain.join("\n\n");
+  document.getElementById("preview").innerHTML=html.length?html.join(""):"No matches found.";
+  document.getElementById("preview-area").className="";
 }
 
-/* =======================
-   UI
-======================= */
-function kapSwitch(m){
-  document.getElementById("tab-query").className=m==="query"?"active":"";
-  document.getElementById("tab-content").className=m==="content"?"active":"";
-  document.getElementById("kap-query").className=m==="query"?"":"kap-hidden";
-  document.getElementById("kap-content").className=m==="content"?"":"kap-hidden";
-  document.getElementById("output-text").value="";
+/* ===== UI ===== */
+function switchTab(tab){
+  document.getElementById("builder").className=tab==="builder"?"":"hidden";
+  document.getElementById("extractor").className=tab==="extractor"?"":"hidden";
+  document.getElementById("tab-builder").className=tab==="builder"?"active":"";
+  document.getElementById("tab-extractor").className=tab==="extractor"?"active":"";
+  document.getElementById("output").value="";
+  document.getElementById("preview-area").className="hidden";
 }
 </script>
-
 </body>
 </html>
