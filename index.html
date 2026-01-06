@@ -19,7 +19,12 @@
 h1{margin:0;font-size:24px}
 .sub{font-size:13px;color:#64748b;margin-bottom:20px}
 
-.tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid #e2e8f0}
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  border-bottom:1px solid #e2e8f0
+}
 .tabs button{
   padding:12px 18px;
   background:none;
@@ -35,7 +40,13 @@ h1{margin:0;font-size:24px}
 }
 
 .input-group{margin-bottom:15px}
-label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#475569}
+label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:5px;
+  color:#475569
+}
 
 input,select,textarea{
   width:100%;
@@ -88,6 +99,7 @@ button.main{
   max-height:300px;
   overflow:auto
 }
+
 .highlight{background:#fde047;font-weight:700}
 .block{
   margin-bottom:10px;
@@ -104,7 +116,7 @@ button.main{
 <body>
 <div id="kap-app">
 <h1>Keyword Architect Pro</h1>
-<div class="sub">Clean Grammar · SEO-Safe · Blogger Ready</div>
+<div class="sub">Grammar-Aware Keyword Builder & Extractor</div>
 
 <div class="tabs">
   <button id="tab-builder" class="active" onclick="switchTab('builder')">
@@ -115,7 +127,7 @@ button.main{
   </button>
 </div>
 
-<!-- TOOL 1 -->
+<!-- TOOL 1: KEYWORD BUILDER -->
 <div id="builder">
   <div class="input-group">
     <label>Seed Keyword</label>
@@ -128,17 +140,17 @@ button.main{
   </div>
 
   <div class="input-group">
-    <label>Optional Modifier Type</label>
+    <label>Optional Additional Phrase Type</label>
     <select id="modifier-type">
       <option value="">None</option>
-      <option value="interrogative">How / Why / Who / What (Question)</option>
+      <option value="interrogative">Question (How / Why / What)</option>
       <option value="context">Contextual Phrase</option>
     </select>
   </div>
 
   <div class="input-group">
-    <label>Optional Modifier Phrase</label>
-    <input id="modifier-text" placeholder="How to use">
+    <label>Additional Phrase</label>
+    <input id="modifier-text" placeholder="How to use / for beginners">
   </div>
 
   <button class="main" onclick="runBuilder()">
@@ -146,7 +158,7 @@ button.main{
   </button>
 </div>
 
-<!-- TOOL 2 -->
+<!-- TOOL 2: CONTENT EXTRACTOR -->
 <div id="extractor" class="hidden">
   <div class="input-group">
     <label>Keyword to Find</label>
@@ -185,7 +197,7 @@ const Grammar={
   ]
 };
 
-/* ===== TOOL 1: BUILDER ===== */
+/* ===== TOOL 1: KEYWORD BUILDER ===== */
 function runBuilder(){
   const seed=document.getElementById("seed").value.trim();
   if(!seed) return alert("Please enter a seed keyword");
@@ -199,13 +211,26 @@ function runBuilder(){
   let out=[];
 
   locations.forEach(loc=>{
+
+    /* INTERROGATIVE: ONE CLEAN QUESTION ONLY */
     if(type==="interrogative" && phrase){
       out.push(`${phrase} ${Grammar.article(seed)} ${seed} in ${loc}`);
-    } else {
-      Grammar.blueprints.forEach(b=>{
-        out.push(`${b(seed)} in ${loc}`);
-      });
+      out.push(`${seed} near ${loc}`);
+      return;
     }
+
+    /* CONTEXTUAL / NORMAL MODE */
+    Grammar.blueprints.forEach(bp=>{
+      let line=bp(seed);
+
+      if(type==="context" && phrase){
+        line+=` ${phrase}`;
+      }
+
+      line+=` in ${loc}`;
+      out.push(line);
+    });
+
     out.push(`${seed} near ${loc}`);
   });
 
@@ -213,7 +238,7 @@ function runBuilder(){
   document.getElementById("preview-area").className="hidden";
 }
 
-/* ===== TOOL 2: EXTRACTOR ===== */
+/* ===== TOOL 2: CONTENT EXTRACTOR ===== */
 function runExtractor(){
   const seed=document.getElementById("extract-seed").value.trim();
   const text=document.getElementById("content").value;
@@ -235,16 +260,21 @@ function runExtractor(){
   });
 
   document.getElementById("output").value=plain.join("\n\n");
-  document.getElementById("preview").innerHTML=html.length?html.join(""):"No matches found.";
+  document.getElementById("preview").innerHTML=
+    html.length?html.join(""):"No matches found.";
   document.getElementById("preview-area").className="";
 }
 
 /* ===== UI ===== */
 function switchTab(tab){
-  document.getElementById("builder").className=tab==="builder"?"":"hidden";
-  document.getElementById("extractor").className=tab==="extractor"?"":"hidden";
-  document.getElementById("tab-builder").className=tab==="builder"?"active":"";
-  document.getElementById("tab-extractor").className=tab==="extractor"?"active":"";
+  document.getElementById("builder").className=
+    tab==="builder"?"":"hidden";
+  document.getElementById("extractor").className=
+    tab==="extractor"?"":"hidden";
+  document.getElementById("tab-builder").className=
+    tab==="builder"?"active":"";
+  document.getElementById("tab-extractor").className=
+    tab==="extractor"?"active":"";
   document.getElementById("output").value="";
   document.getElementById("preview-area").className="hidden";
 }
