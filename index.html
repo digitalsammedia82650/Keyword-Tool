@@ -43,18 +43,6 @@
   background:#2563eb; color:#fff; font-size:15px; font-weight:700; cursor:pointer;
 }
 
-/* COPY BUTTON */
-.copy-widget-btn{
-  margin-top:15px;
-  background:#0f172a;
-  color:#fff;
-  padding:12px;
-  border-radius:8px;
-  border:none;
-  font-weight:600;
-  cursor:pointer;
-}
-
 /* OUTPUT LOGIC */
 .results-label { margin-top: 25px; font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 1px;}
 #output-text {
@@ -86,49 +74,129 @@
     <button id="tab-content" onclick="kapSwitch('content')">Logic Extractor</button>
   </div>
 
+  <!-- TOOL 1: QUERY BUILDER -->
   <div id="kap-query">
     <div class="input-group">
       <label class="input-label">Seed Keyword</label>
-      <input id="seed">
+      <input id="seed" placeholder="e.g. coffee maker">
     </div>
     <div class="input-group">
-      <label class="input-label">Locations</label>
-      <input id="location">
+      <label class="input-label">Locations (comma separated)</label>
+      <input id="location" placeholder="e.g. London, New York, Tokyo">
     </div>
-    <button class="main-btn" onclick="runQuery()">Generate</button>
+    <button class="main-btn" onclick="runQuery()">Generate Localized Sets</button>
   </div>
 
+  <!-- TOOL 2: CONTENT EXTRACTOR -->
   <div id="kap-content" class="kap-hidden">
     <div class="input-group">
-      <label class="input-label">Keyword</label>
-      <input id="content-seed">
+      <label class="input-label">Keyword to Extract</label>
+      <input id="content-seed" placeholder="Enter word to find...">
     </div>
     <div class="input-group">
-      <textarea id="content-input"></textarea>
+      <label class="input-label">Paste Content (Handles Headlines & Newlines)</label>
+      <textarea id="content-input" placeholder="Paste text here... the tool now recognizes headlines as sentences."></textarea>
     </div>
-    <button class="main-btn" onclick="runContent()">Extract</button>
+    <button class="main-btn" onclick="runContent()">Extract Grammatical Blocks</button>
   </div>
 
-  <div class="results-label">Final Output</div>
-  <textarea id="output-text" readonly></textarea>
-
-  <button class="copy-widget-btn" onclick="copyWidgetCode()">
-    📋 Copy This Widget
-  </button>
-
-  <textarea id="widget-code" class="kap-hidden"></textarea>
+  <!-- OUTPUT -->
+  <div class="results-label">Final Plain Text</div>
+  <textarea id="output-text" readonly placeholder="Results for copy-pasting..."></textarea>
+  
+  <div id="preview-area" class="kap-hidden">
+    <div class="results-label">Logic Preview (Context Highlights)</div>
+    <div id="highlight-preview"></div>
+  </div>
 </div>
 
 <script>
-function copyWidgetCode(){
-  const code = document.documentElement.outerHTML;
-  const box = document.getElementById("widget-code");
-  box.value = code;
-  box.className = "";
-  box.select();
-  document.execCommand("copy");
-  box.className = "kap-hidden";
-  alert("Widget code copied! Paste into Blogger / HTML editor.");
+/* =====================================================
+   GRAMMAR ENGINE
+===================================================== */
+
+const Grammar = {
+    plural: (w) => w.endsWith('s') ? w : w + 's',
+    article: (w) => /^[aeiou]/i.test(w) ? "an" : "a",
+    
+    blueprints: [
+        (s) => `How to use ${Grammar.article(s)} ${s}`,
+        (s) => `Best ${s} for professionals`,
+        (s) => `Affordable ${Grammar.plural(s)} available online`,
+        (s) => `Where to buy ${Grammar.article(s)} ${s}`,
+        (s) => `Professional ${s} guide 2025`
+    ]
+};
+
+/* ---- TOOL 1: QUERY BUILDER (MULTI-LOCATION) ---- */
+function runQuery() {
+    const seed = document.getElementById("seed").value.trim();
+    const locInput = document.getElementById("location").value.trim();
+    if (!seed) return alert("Enter a seed keyword");
+
+    document.getElementById("preview-area").className = "kap-hidden";
+    let locations = locInput ? locInput.split(',').map(l => l.trim()) : [""];
+    let finalKeywords = [];
+
+    locations.forEach(loc => {
+        Grammar.blueprints.forEach(tpl => {
+            let line = tpl(seed);
+            if (loc) line += ` in ${loc}`;
+            finalKeywords.push(line);
+        });
+        if(loc) finalKeywords.push(`${seed} near ${loc}`);
+    });
+
+    document.getElementById("output-text").value = finalKeywords.join("\n");
+}
+
+/* ---- TOOL 2: CONTENT EXTRACTOR (BOUNDARY LOGIC) ---- */
+function runContent() {
+    const seed = document.getElementById("content-seed").value.trim();
+    const text = document.getElementById("content-input").value;
+    if (!seed || !text) return alert("Enter keyword and content");
+
+    document.getElementById("preview-area").className = "";
+
+    /**
+     * GRAMMAR LOGIC UPGRADE:
+     * We split by:
+     * 1. Newlines (\n) -> capturing headlines
+     * 2. Punctuation (. ! ?) followed by space or end of string
+     */
+    const segments = text.split(/\n|(?<=[.!?])\s+/);
+    
+    let plainTextOutput = [];
+    let htmlPreviewOutput = [];
+    const seedRegex = new RegExp(`(${seed})`, 'gi');
+
+    segments.forEach(seg => {
+        let cleanSeg = seg.trim();
+        if (!cleanSeg) return;
+
+        if (cleanSeg.toLowerCase().includes(seed.toLowerCase())) {
+            // Logic: It's a valid sentence/headline containing the seed
+            plainTextOutput.push(cleanSeg);
+            
+            const highlighted = cleanSeg.replace(seedRegex, `<span class="highlight">$1</span>`);
+            htmlPreviewOutput.push(`<div class="sentence-block">${highlighted}</div>`);
+        }
+    });
+
+    document.getElementById("output-text").value = plainTextOutput.join("\n\n");
+    document.getElementById("highlight-preview").innerHTML = htmlPreviewOutput.length 
+        ? htmlPreviewOutput.join("") 
+        : "No matches found.";
+}
+
+/* ---- UI ---- */
+function kapSwitch(mode) {
+    document.getElementById("tab-query").className = (mode === 'query' ? 'active' : '');
+    document.getElementById("tab-content").className = (mode === 'content' ? 'active' : '');
+    document.getElementById("kap-query").className = (mode === 'query' ? '' : 'kap-hidden');
+    document.getElementById("kap-content").className = (mode === 'content' ? '' : 'kap-hidden');
+    document.getElementById("output-text").value = "";
+    document.getElementById("preview-area").className = "kap-hidden";
 }
 </script>
 
