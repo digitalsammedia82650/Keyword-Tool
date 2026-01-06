@@ -25,178 +25,231 @@
 .kap-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid #e2e8f0; }
 .kap-tabs button {
   padding:12px 20px; border:none; background:none;
-  font-weight:600; cursor:pointer; color:#64748b; border-bottom: 2px solid transparent;
+  font-weight:600; cursor:pointer; color:#64748b; border-bottom:2px solid transparent;
 }
-.kap-tabs button.active { color:#2563eb; border-bottom: 2px solid #2563eb; }
+.kap-tabs button.active { color:#2563eb; border-bottom:2px solid #2563eb; }
 
 .input-group { margin-bottom:15px; }
-.input-label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #475569; }
-
-#kap-app input, #kap-app textarea {
-  width:100%; padding:12px; border-radius:8px; border:1px solid #cbd5e1;
-  font-size:14px; box-sizing:border-box; outline:none; background: #fff;
-}
-#kap-app input:focus { border-color:#2563eb; }
-
-#kap-app button.main-btn {
-  width:100%; padding:15px; border:none; border-radius:8px;
-  background:#2563eb; color:#fff; font-size:15px; font-weight:700; cursor:pointer;
+.input-label {
+  display:block; font-size:12px; font-weight:bold;
+  margin-bottom:5px; color:#475569;
 }
 
-/* OUTPUT LOGIC */
-.results-label { margin-top: 25px; font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 1px;}
-#output-text {
-  width: 100%; height: 180px; margin-top: 10px; padding: 12px;
-  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
-  font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;
+#kap-app input,
+#kap-app textarea,
+#kap-app select{
+  width:100%; padding:12px; border-radius:8px;
+  border:1px solid #cbd5e1; font-size:14px;
+  box-sizing:border-box; background:#fff;
 }
 
-/* HIGHLIGHT PREVIEW */
-#highlight-preview {
-  width: 100%; min-height: 50px; max-height: 300px; margin-top: 10px;
-  padding: 15px; background: #fff; border: 1px solid #e2e8f0;
-  border-radius: 8px; overflow-y: auto; line-height: 1.6;
+#kap-app button.main-btn{
+  width:100%; padding:15px; border:none;
+  border-radius:8px; background:#2563eb;
+  color:#fff; font-size:15px; font-weight:700;
+  cursor:pointer;
 }
-.highlight { background: #ffde21; font-weight: bold; padding: 0 3px; border-radius: 2px; color: #000; }
-.sentence-block { margin-bottom: 10px; padding: 8px; background: #f1f5f9; border-left: 4px solid #2563eb; border-radius: 4px; }
 
-.kap-hidden { display:none; }
+/* OUTPUT */
+.results-label{
+  margin-top:25px; font-size:11px;
+  font-weight:800; color:#1e40af;
+  text-transform:uppercase; letter-spacing:1px;
+}
+#output-text{
+  width:100%; height:180px; margin-top:10px;
+  padding:12px; background:#f8fafc;
+  border:1px solid #e2e8f0; border-radius:8px;
+  font-family:monospace; font-size:13px;
+}
+
+#highlight-preview{
+  width:100%; margin-top:10px;
+  padding:15px; background:#fff;
+  border:1px solid #e2e8f0; border-radius:8px;
+}
+.highlight{background:#ffde21;font-weight:bold;}
+.sentence-block{
+  margin-bottom:10px; padding:8px;
+  background:#f1f5f9; border-left:4px solid #2563eb;
+  border-radius:4px;
+}
+
+.kap-hidden{display:none;}
 </style>
 </head>
+
 <body>
 
 <div id="kap-app">
   <h1>Keyword Architect Pro</h1>
-  <div class="sub">V3.0 Boundary-Aware Grammar Logic</div>
+  <div class="sub">V3.1 Grammar + Modifier Aware</div>
 
   <div class="kap-tabs">
-    <button id="tab-query" class="active" onclick="kapSwitch('query')">Multi-Location Builder</button>
-    <button id="tab-content" onclick="kapSwitch('content')">Logic Extractor</button>
+    <button id="tab-query" class="active" onclick="kapSwitch('query')">
+      Multi-Location Builder
+    </button>
+    <button id="tab-content" onclick="kapSwitch('content')">
+      Logic Extractor
+    </button>
   </div>
 
-  <!-- TOOL 1: QUERY BUILDER -->
+  <!-- TOOL 1 -->
   <div id="kap-query">
+
     <div class="input-group">
       <label class="input-label">Seed Keyword</label>
-      <input id="seed" placeholder="e.g. coffee maker">
+      <input id="seed" placeholder="e.g. bookmark">
     </div>
+
     <div class="input-group">
       <label class="input-label">Locations (comma separated)</label>
-      <input id="location" placeholder="e.g. London, New York, Tokyo">
+      <input id="location" placeholder="New York, London">
     </div>
+
+    <!-- ✅ NEW MODIFIER CONTROLS -->
+    <div class="input-group">
+      <label class="input-label">Add Additional Phrase (Optional)</label>
+      <select id="modifier-type">
+        <option value="">— None —</option>
+        <option value="verb">Verb Phrase Complement (Interrogative)</option>
+        <option value="intent">Intent Modifier</option>
+        <option value="context">Contextual Modifier</option>
+        <option value="expansion">Query Expansion Phrase</option>
+        <option value="prepositional">Prepositional Adjunct</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Additional Phrase Text</label>
+      <input id="modifier-text" placeholder="e.g. how to use, for beginners">
+    </div>
+
     <button class="main-btn" onclick="runQuery()">Generate Localized Sets</button>
   </div>
 
-  <!-- TOOL 2: CONTENT EXTRACTOR -->
+  <!-- TOOL 2 -->
   <div id="kap-content" class="kap-hidden">
     <div class="input-group">
       <label class="input-label">Keyword to Extract</label>
-      <input id="content-seed" placeholder="Enter word to find...">
+      <input id="content-seed">
     </div>
     <div class="input-group">
-      <label class="input-label">Paste Content (Handles Headlines & Newlines)</label>
-      <textarea id="content-input" placeholder="Paste text here... the tool now recognizes headlines as sentences."></textarea>
+      <label class="input-label">Paste Content</label>
+      <textarea id="content-input"></textarea>
     </div>
     <button class="main-btn" onclick="runContent()">Extract Grammatical Blocks</button>
   </div>
 
-  <!-- OUTPUT -->
   <div class="results-label">Final Plain Text</div>
-  <textarea id="output-text" readonly placeholder="Results for copy-pasting..."></textarea>
-  
+  <textarea id="output-text" readonly></textarea>
+
   <div id="preview-area" class="kap-hidden">
-    <div class="results-label">Logic Preview (Context Highlights)</div>
+    <div class="results-label">Logic Preview</div>
     <div id="highlight-preview"></div>
   </div>
 </div>
 
 <script>
-/* =====================================================
-   GRAMMAR ENGINE
-===================================================== */
+/* ================= GRAMMAR ENGINE ================= */
 
 const Grammar = {
-    plural: (w) => w.endsWith('s') ? w : w + 's',
-    article: (w) => /^[aeiou]/i.test(w) ? "an" : "a",
-    
-    blueprints: [
-        (s) => `How to use ${Grammar.article(s)} ${s}`,
-        (s) => `Best ${s} for professionals`,
-        (s) => `Affordable ${Grammar.plural(s)} available online`,
-        (s) => `Where to buy ${Grammar.article(s)} ${s}`,
-        (s) => `Professional ${s} guide 2025`
-    ]
+  plural:w=>w.endsWith('s')?w:w+'s',
+  article:w=>/^[aeiou]/i.test(w)?"an":"a",
+  blueprints:[
+    s=>`How to use ${Grammar.article(s)} ${s}`,
+    s=>`Best ${s} for professionals`,
+    s=>`Affordable ${Grammar.plural(s)} available online`,
+    s=>`Where to buy ${Grammar.article(s)} ${s}`,
+    s=>`Professional ${s} guide 2025`
+  ]
 };
 
-/* ---- TOOL 1: QUERY BUILDER (MULTI-LOCATION) ---- */
-function runQuery() {
-    const seed = document.getElementById("seed").value.trim();
-    const locInput = document.getElementById("location").value.trim();
-    if (!seed) return alert("Enter a seed keyword");
+/* ================= TOOL 1 ================= */
 
-    document.getElementById("preview-area").className = "kap-hidden";
-    let locations = locInput ? locInput.split(',').map(l => l.trim()) : [""];
-    let finalKeywords = [];
+function runQuery(){
+  const seed=document.getElementById("seed").value.trim();
+  const locInput=document.getElementById("location").value.trim();
+  const modType=document.getElementById("modifier-type").value;
+  const modText=document.getElementById("modifier-text").value.trim();
 
-    locations.forEach(loc => {
-        Grammar.blueprints.forEach(tpl => {
-            let line = tpl(seed);
-            if (loc) line += ` in ${loc}`;
-            finalKeywords.push(line);
-        });
-        if(loc) finalKeywords.push(`${seed} near ${loc}`);
+  if(!seed) return alert("Enter a seed keyword");
+
+  let locations=locInput?locInput.split(",").map(l=>l.trim()):[""];
+  let out=[];
+
+  locations.forEach(loc=>{
+    Grammar.blueprints.forEach(tpl=>{
+      let parts=[];
+
+      // 1️⃣ Verb phrase first
+      if(modType==="verb" && modText) parts.push(modText);
+
+      let base=tpl(seed);
+
+      // 2️⃣ Intent override
+      if(modType==="intent" && modText){
+        base=`${modText} ${seed}`;
+      }
+
+      parts.push(base);
+
+      // 3️⃣ Context / expansion after seed
+      if((modType==="context"||modType==="expansion") && modText){
+        parts.push(modText);
+      }
+
+      // 4️⃣ Location
+      if(loc) parts.push(`in ${loc}`);
+
+      // 5️⃣ Prepositional adjunct
+      if(modType==="prepositional" && modText){
+        parts.push(modText);
+      }
+
+      out.push(parts.join(" ").replace(/\s+/g," ").trim());
     });
 
-    document.getElementById("output-text").value = finalKeywords.join("\n");
+    if(loc) out.push(`${seed} near ${loc}`);
+  });
+
+  document.getElementById("output-text").value=out.join("\n");
 }
 
-/* ---- TOOL 2: CONTENT EXTRACTOR (BOUNDARY LOGIC) ---- */
-function runContent() {
-    const seed = document.getElementById("content-seed").value.trim();
-    const text = document.getElementById("content-input").value;
-    if (!seed || !text) return alert("Enter keyword and content");
+/* ================= TOOL 2 ================= */
 
-    document.getElementById("preview-area").className = "";
+function runContent(){
+  const seed=document.getElementById("content-seed").value.trim();
+  const text=document.getElementById("content-input").value;
+  if(!seed||!text) return alert("Enter keyword and content");
 
-    /**
-     * GRAMMAR LOGIC UPGRADE:
-     * We split by:
-     * 1. Newlines (\n) -> capturing headlines
-     * 2. Punctuation (. ! ?) followed by space or end of string
-     */
-    const segments = text.split(/\n|(?<=[.!?])\s+/);
-    
-    let plainTextOutput = [];
-    let htmlPreviewOutput = [];
-    const seedRegex = new RegExp(`(${seed})`, 'gi');
+  const segments=text.split(/\n|(?<=[.!?])\s+/);
+  let plain=[], preview=[];
+  const rx=new RegExp(`(${seed})`,"gi");
 
-    segments.forEach(seg => {
-        let cleanSeg = seg.trim();
-        if (!cleanSeg) return;
+  segments.forEach(s=>{
+    s=s.trim();
+    if(!s) return;
+    if(s.toLowerCase().includes(seed.toLowerCase())){
+      plain.push(s);
+      preview.push(`<div class="sentence-block">${s.replace(rx,"<span class='highlight'>$1</span>")}</div>`);
+    }
+  });
 
-        if (cleanSeg.toLowerCase().includes(seed.toLowerCase())) {
-            // Logic: It's a valid sentence/headline containing the seed
-            plainTextOutput.push(cleanSeg);
-            
-            const highlighted = cleanSeg.replace(seedRegex, `<span class="highlight">$1</span>`);
-            htmlPreviewOutput.push(`<div class="sentence-block">${highlighted}</div>`);
-        }
-    });
-
-    document.getElementById("output-text").value = plainTextOutput.join("\n\n");
-    document.getElementById("highlight-preview").innerHTML = htmlPreviewOutput.length 
-        ? htmlPreviewOutput.join("") 
-        : "No matches found.";
+  document.getElementById("output-text").value=plain.join("\n\n");
+  document.getElementById("highlight-preview").innerHTML=preview.join("")||"No matches found.";
+  document.getElementById("preview-area").classList.remove("kap-hidden");
 }
 
-/* ---- UI ---- */
-function kapSwitch(mode) {
-    document.getElementById("tab-query").className = (mode === 'query' ? 'active' : '');
-    document.getElementById("tab-content").className = (mode === 'content' ? 'active' : '');
-    document.getElementById("kap-query").className = (mode === 'query' ? '' : 'kap-hidden');
-    document.getElementById("kap-content").className = (mode === 'content' ? '' : 'kap-hidden');
-    document.getElementById("output-text").value = "";
-    document.getElementById("preview-area").className = "kap-hidden";
+/* ================= UI ================= */
+
+function kapSwitch(mode){
+  document.getElementById("tab-query").className=mode==="query"?"active":"";
+  document.getElementById("tab-content").className=mode==="content"?"active":"";
+  document.getElementById("kap-query").className=mode==="query"?"":"kap-hidden";
+  document.getElementById("kap-content").className=mode==="content"?"":"kap-hidden";
+  document.getElementById("output-text").value="";
+  document.getElementById("preview-area").className="kap-hidden";
 }
 </script>
 
