@@ -7,7 +7,7 @@
 
 <style>
 #kap-app{
-  max-width:900px;
+  max-width:950px;
   margin:30px auto;
   background:#ffffff;
   padding:30px;
@@ -16,7 +16,7 @@
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   color:#1e293b;
 }
-h1{margin:0;font-size:24px}
+h1{margin:0;font-size:26px}
 .sub{font-size:13px;color:#64748b;margin-bottom:20px}
 
 .tabs{
@@ -80,7 +80,7 @@ button.main{
 
 #output{
   width:100%;
-  height:180px;
+  height:240px;
   margin-top:10px;
   padding:12px;
   background:#f8fafc;
@@ -116,7 +116,7 @@ button.main{
 <body>
 <div id="kap-app">
 <h1>Keyword Architect Pro</h1>
-<div class="sub">Grammar-Aware Keyword Builder & Extractor</div>
+<div class="sub">Extensive Grammar-Aware Keyword Builder & Extractor</div>
 
 <div class="tabs">
   <button id="tab-builder" class="active" onclick="switchTab('builder')">
@@ -127,7 +127,7 @@ button.main{
   </button>
 </div>
 
-<!-- TOOL 1: KEYWORD BUILDER -->
+<!-- TOOL 1 -->
 <div id="builder">
   <div class="input-group">
     <label>Seed Keyword</label>
@@ -140,11 +140,11 @@ button.main{
   </div>
 
   <div class="input-group">
-    <label>Optional Additional Phrase Type</label>
+    <label>Additional Phrase Type</label>
     <select id="modifier-type">
       <option value="">None</option>
       <option value="interrogative">Question (How / Why / What)</option>
-      <option value="context">Contextual Phrase</option>
+      <option value="context">Contextual / Expansion Phrase</option>
     </select>
   </div>
 
@@ -158,7 +158,7 @@ button.main{
   </button>
 </div>
 
-<!-- TOOL 2: CONTENT EXTRACTOR -->
+<!-- TOOL 2 -->
 <div id="extractor" class="hidden">
   <div class="input-group">
     <label>Keyword to Find</label>
@@ -167,7 +167,7 @@ button.main{
 
   <div class="input-group">
     <label>Paste Your Content</label>
-    <textarea id="content" placeholder="Paste article text here..."></textarea>
+    <textarea id="content" placeholder="Paste article or webpage text here..."></textarea>
   </div>
 
   <button class="main" onclick="runExtractor()">
@@ -185,15 +185,46 @@ button.main{
 </div>
 
 <script>
-/* ===== GRAMMAR HELPERS ===== */
+/* ===== GRAMMAR & TEMPLATE ENGINE ===== */
 const Grammar={
   plural:w=>w.endsWith("s")?w:w+"s",
   article:w=>/^[aeiou]/i.test(w)?"an":"a",
+
+  /* EXTENSIVE TEMPLATE LIST (RESTORED) */
   blueprints:[
+    /* Informational */
+    s=>`How to use ${Grammar.article(s)} ${s}`,
+    s=>`What is ${Grammar.article(s)} ${s}`,
+    s=>`Why use ${Grammar.article(s)} ${s}`,
+    s=>`${s} meaning and definition`,
+
+    /* Commercial / Quality */
+    s=>`Best ${s}`,
+    s=>`Top ${s} in 2025`,
     s=>`Best ${s} for professionals`,
-    s=>`Affordable ${Grammar.plural(s)} available online`,
-    s=>`Where to buy ${Grammar.article(s)} ${s}`,
-    s=>`Professional ${s} guide 2025`
+    s=>`${s} reviews and ratings`,
+
+    /* Transactional */
+    s=>`Buy ${Grammar.article(s)} ${s}`,
+    s=>`${s} price`,
+    s=>`${s} cost`,
+    s=>`Cheap ${Grammar.plural(s)}`,
+    s=>`${s} available online`,
+
+    /* Comparison */
+    s=>`${s} vs alternatives`,
+    s=>`Best alternative to ${s}`,
+    s=>`${s} comparison guide`,
+
+    /* Educational */
+    s=>`${s} tutorial`,
+    s=>`${s} step by step guide`,
+    s=>`${s} tips and tricks`,
+    s=>`${s} examples`,
+
+    /* Freshness */
+    s=>`${s} guide 2025`,
+    s=>`Latest ${s}`
   ]
 };
 
@@ -212,14 +243,14 @@ function runBuilder(){
 
   locations.forEach(loc=>{
 
-    /* INTERROGATIVE: ONE CLEAN QUESTION ONLY */
+    /* INTERROGATIVE MODE */
     if(type==="interrogative" && phrase){
       out.push(`${phrase} ${Grammar.article(seed)} ${seed} in ${loc}`);
       out.push(`${seed} near ${loc}`);
       return;
     }
 
-    /* CONTEXTUAL / NORMAL MODE */
+    /* FULL TEMPLATE MODE */
     Grammar.blueprints.forEach(bp=>{
       let line=bp(seed);
 
@@ -231,7 +262,9 @@ function runBuilder(){
       out.push(line);
     });
 
+    /* Local proximity */
     out.push(`${seed} near ${loc}`);
+    out.push(`${seed} near me in ${loc}`);
   });
 
   document.getElementById("output").value=out.join("\n");
@@ -261,20 +294,16 @@ function runExtractor(){
 
   document.getElementById("output").value=plain.join("\n\n");
   document.getElementById("preview").innerHTML=
-    html.length?html.join(""):"No matches found.";
+    html.length?html.join(""):"No matching sentences found.";
   document.getElementById("preview-area").className="";
 }
 
 /* ===== UI ===== */
 function switchTab(tab){
-  document.getElementById("builder").className=
-    tab==="builder"?"":"hidden";
-  document.getElementById("extractor").className=
-    tab==="extractor"?"":"hidden";
-  document.getElementById("tab-builder").className=
-    tab==="builder"?"active":"";
-  document.getElementById("tab-extractor").className=
-    tab==="extractor"?"active":"";
+  document.getElementById("builder").className=tab==="builder"?"":"hidden";
+  document.getElementById("extractor").className=tab==="extractor"?"":"hidden";
+  document.getElementById("tab-builder").className=tab==="builder"?"active":"";
+  document.getElementById("tab-extractor").className=tab==="extractor"?"active":"";
   document.getElementById("output").value="";
   document.getElementById("preview-area").className="hidden";
 }
